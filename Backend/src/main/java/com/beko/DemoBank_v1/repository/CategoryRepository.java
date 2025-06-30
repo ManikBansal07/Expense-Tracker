@@ -1,6 +1,6 @@
 package com.beko.DemoBank_v1.repository;
 
-import com.example.expensetracker.model.Category;
+import com.beko.DemoBank_v1.models.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
