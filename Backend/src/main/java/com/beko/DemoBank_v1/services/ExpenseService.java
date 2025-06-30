@@ -13,8 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.time.YearMonth;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,13 +29,11 @@ public class ExpenseService {
     @Autowired
     private UserRepository userRepository;
 
-    // 🔹 Fetch all expenses for a user
     public List<ExpenseDTO> getAllExpenses(String userId) {
         List<Expense> expenses = expenseRepository.findByUser_User_id(userId);
         return expenses.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    // 🔹 Add new expense for user
     public ExpenseDTO addExpense(String userId, CreateExpenseRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -53,12 +51,10 @@ public class ExpenseService {
         return convertToDTO(saved);
     }
 
-    // 🔹 Delete expense by ID
     public void deleteExpense(Long expenseId) {
         expenseRepository.deleteById(expenseId);
     }
 
-    // 🔍 Filter by Category
     public List<ExpenseDTO> getExpensesByCategory(String userId, String categoryName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -66,7 +62,6 @@ public class ExpenseService {
         return expenses.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    // 📅 Filter by Date Range
     public List<ExpenseDTO> getExpensesByDateRange(String userId, String start, String end) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -76,7 +71,6 @@ public class ExpenseService {
         return expenses.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    // 🔁 Filter by Date + Category
     public List<ExpenseDTO> getExpensesByDateAndCategory(String userId, String start, String end, String categoryName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -89,7 +83,29 @@ public class ExpenseService {
         return expenses.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    // 🔄 Helper to convert entity to DTO
+    public Map<String, Object> getMonthlySummary(String userId, String monthStr) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        YearMonth ym = YearMonth.parse(monthStr);  // "2025-06"
+        LocalDate start = ym.atDay(1);
+        LocalDate end = ym.atEndOfMonth();
+
+        List<ExpenseDTO> expenses = getExpensesByDateRange(userId, start.toString(), end.toString());
+
+        double total = expenses.stream().mapToDouble(ExpenseDTO::getAmount).sum();
+        Map<String, Double> byCategory = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        ExpenseDTO::getCategoryName,
+                        Collectors.summingDouble(ExpenseDTO::getAmount)
+                ));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", total);
+        result.put("byCategory", byCategory);
+        return result;
+    }
+
     public ExpenseDTO convertToDTO(Expense expense) {
         ExpenseDTO dto = new ExpenseDTO();
         dto.setId(expense.getId());
