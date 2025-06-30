@@ -40,4 +40,35 @@ public class ExpenseController {
         expenseService.deleteExpense(expenseId);
         return ResponseEntity.noContent().build();
     }
+
+        // 🔍 Filter by Category
+    @GetMapping("/{userId}/category/{categoryName}")
+    public ResponseEntity<List<ExpenseDTO>> getExpensesByCategory(
+            @PathVariable String userId,
+            @PathVariable String categoryName) {
+        List<ExpenseDTO> expenses = expenseService.getExpensesByCategory(userId, categoryName);
+        return ResponseEntity.ok(expenses);
+    }
+
+    // 📅 Filter by Date Range
+    @GetMapping("/{userId}/filter/date")
+    public ResponseEntity<List<ExpenseDTO>> getExpensesByDateRange(
+            @PathVariable String userId,
+            @RequestParam String start,
+            @RequestParam String end) {
+        List<ExpenseDTO> expenses = expenseService.getExpensesByDateRange(userId, start, end);
+        return ResponseEntity.ok(expenses);
+    }
+
+    // 🔁 Filter by Date Range + Category
+    @GetMapping("/{userId}/filter/date-category")
+    public ResponseEntity<List<ExpenseDTO>> getExpensesByDateAndCategory(
+            @PathVariable String userId,
+            @RequestParam String start,
+            @RequestParam String end,
+            @RequestParam String category) {
+        List<ExpenseDTO> expenses = expenseService.getExpensesByDateAndCategory(userId, start, end, category);
+        return ResponseEntity.ok(expenses);
+    }
+
 }
